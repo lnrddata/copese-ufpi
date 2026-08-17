@@ -4239,3 +4239,809 @@ input:focus-visible {
   display: inline-block;
   line-height: 1.35;
 }
+
+
+/* Atualização de dados: três etapas do processo (Chamada Regular + 1ª + 2ª chamada da lista de espera). */
+.overview-analysis-grid > .overview-process-panel .cumulative-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 950px) {
+  .overview-analysis-grid > .overview-process-panel .cumulative-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .overview-analysis-grid > .overview-process-panel .cumulative-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .overview-analysis-grid > .overview-process-panel .cumulative-call-label {
+    width: min(90px, 100%);
+    font-size: 7px;
+  }
+
+  .overview-analysis-grid > .overview-process-panel .cumulative-stack {
+    width: 38px;
+  }
+}
+
+/* Correção: o processo agora possui Chamada Regular + 1ª + 2ª chamada da lista de espera. */
+.process-columns,
+.cumulative-columns,
+.overview-analysis-grid > .overview-process-panel .cumulative-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 650px) {
+  .process-columns,
+  .cumulative-columns,
+  .overview-analysis-grid > .overview-process-panel .cumulative-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+
+/* AJUSTE FINAL — visão geral do dashboard */
+.overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.25fr);
+  gap: 17px;
+  margin-bottom: 17px;
+  align-items: stretch;
+}
+
+.overview-grid > .panel,
+.overview-grid > .modality-panel {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.overview-grid .demand-panel,
+.overview-grid .overview-modality-panel {
+  min-height: 310px;
+}
+
+.overview-grid .panel-heading {
+  min-height: 58px;
+  margin-bottom: 14px;
+}
+
+.overview-grid .panel-heading h2 {
+  font-size: 16px;
+  margin-top: 5px;
+}
+
+.overview-grid .demand-panel .bars {
+  flex: 1;
+  justify-content: space-evenly;
+  gap: 12px;
+}
+
+.overview-grid .demand-panel .bar-row > div:first-child {
+  margin-bottom: 5px;
+}
+
+.overview-grid .demand-panel .demand-legend {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #edf1ef;
+}
+
+.overview-grid .overview-modality-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-grid .overview-modality-panel .modality-table-container {
+  flex: 1;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.overview-grid .overview-modality-panel .modality-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.overview-grid .overview-modality-panel .modality-table th,
+.overview-grid .overview-modality-panel .modality-table td {
+  padding: 8px 6px;
+  font-size: 9px;
+}
+
+.overview-grid .overview-modality-panel .modality-table th {
+  font-size: 8px;
+  line-height: 1.25;
+}
+
+.overview-grid .overview-modality-panel .modality-table th:first-child,
+.overview-grid .overview-modality-panel .modality-table td:first-child {
+  width: 18%;
+  padding-left: 0;
+}
+
+.overview-grid .overview-modality-panel .modality-table th:nth-child(2),
+.overview-grid .overview-modality-panel .modality-table td:nth-child(2),
+.overview-grid .overview-modality-panel .modality-table th:nth-child(3),
+.overview-grid .overview-modality-panel .modality-table td:nth-child(3),
+.overview-grid .overview-modality-panel .modality-table th:nth-child(4),
+.overview-grid .overview-modality-panel .modality-table td:nth-child(4) {
+  width: 13%;
+  text-align: center;
+}
+
+.overview-grid .overview-modality-panel .modality-table th:last-child,
+.overview-grid .overview-modality-panel .modality-table td:last-child {
+  width: 43%;
+  padding-right: 0;
+}
+
+.overview-grid .overview-modality-panel .modality-progress-label {
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.overview-grid .overview-modality-panel .modality-progress-label span {
+  font-size: 9px;
+}
+
+.overview-grid .overview-modality-panel .modality-progress-label small {
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.overview-grid .overview-modality-panel .modality-track {
+  height: 5px;
+}
+
+/* Evolução: três etapas, com a linha percentual centrada exatamente nas barras. */
+.overview-process-panel .cumulative-chart {
+  min-height: 292px;
+}
+
+.overview-process-panel .cumulative-plot {
+  height: 292px;
+  padding: 0 34px;
+}
+
+.overview-process-panel .cumulative-line-layer {
+  top: 16px;
+  left: 34px;
+  right: 34px;
+  height: 112px;
+}
+
+.overview-process-panel .cumulative-columns {
+  left: 34px;
+  right: 34px;
+  bottom: 0;
+  top: auto;
+  height: 226px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  align-items: end;
+}
+
+.overview-process-panel .cumulative-column {
+  height: 220px;
+  grid-template-rows: 174px auto auto auto;
+}
+
+.overview-process-panel .cumulative-stack {
+  width: 58px;
+  height: 174px;
+}
+
+.overview-process-panel .cumulative-line-point b {
+  bottom: 10px;
+  font-size: 8px;
+}
+
+.overview-process-panel .cumulative-call-label {
+  max-width: 100px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+@media (max-width: 1100px) {
+  .overview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 800px) {
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-grid .overview-modality-panel .modality-table-container {
+    overflow-x: auto;
+  }
+
+  .overview-grid .overview-modality-panel .modality-table {
+    min-width: 700px;
+    table-layout: auto;
+  }
+}
+
+@media (max-width: 650px) {
+  .overview-process-panel .cumulative-chart {
+    min-height: 270px;
+  }
+
+  .overview-process-panel .cumulative-plot {
+    height: 270px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .overview-process-panel .cumulative-line-layer {
+    left: 14px;
+    right: 14px;
+    top: 14px;
+    height: 104px;
+  }
+
+  .overview-process-panel .cumulative-columns {
+    left: 14px;
+    right: 14px;
+    height: 208px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .overview-process-panel .cumulative-column {
+    height: 204px;
+    grid-template-rows: 158px auto auto auto;
+  }
+
+  .overview-process-panel .cumulative-stack {
+    width: 48px;
+    height: 158px;
+  }
+}
+
+.theme-dark .overview-grid .demand-panel .demand-legend {
+  border-top-color: #2b4047;
+}
+
+
+/* Correção do gráfico de evolução acumulada:
+   três centros de categoria e uma única linha contínua. */
+.evolution-chart {
+  --chart-columns: 3;
+}
+.evolution-chart .chart-bars,
+.evolution-chart .chart-grid,
+.evolution-chart .chart-line,
+.evolution-chart .chart-labels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 0;
+}
+.evolution-chart .chart-line {
+  pointer-events: none;
+}
+.evolution-chart .chart-line svg,
+.evolution-chart .chart-line polyline {
+  overflow: visible;
+}
+
+
+/* Correção definitiva — tabela de modalidades e linha acumulada */
+.overview-grid .overview-modality-panel .modality-table-container {
+  overflow: visible;
+  min-height: 0;
+}
+
+.overview-grid .overview-modality-panel .modality-table tbody tr {
+  display: table-row;
+  visibility: visible;
+  opacity: 1;
+}
+
+.overview-grid .overview-modality-panel .modality-table tbody td {
+  visibility: visible;
+}
+
+.overview-process-panel .cumulative-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 !important;
+}
+
+.overview-process-panel .cumulative-line-layer {
+  pointer-events: none;
+  overflow: visible;
+}
+
+.overview-process-panel .cumulative-line-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+.overview-process-panel .cumulative-line-path {
+  stroke: #166b8f;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.overview-process-panel .cumulative-svg-point {
+  fill: #166b8f;
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.overview-process-panel .cumulative-line-segment,
+.overview-process-panel .cumulative-line-point {
+  display: none !important;
+}
+
+.overview-process-panel .cumulative-line-point-label {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+}
+
+.overview-process-panel .cumulative-line-point-label b {
+  position: absolute;
+  left: 0;
+  bottom: 11px;
+  transform: translateX(-50%);
+  color: #166b8f;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.theme-dark .overview-process-panel .cumulative-line-path {
+  stroke: #166b8f;
+}
+
+.theme-dark .overview-process-panel .cumulative-svg-point {
+  stroke: #17272d;
+}
+
+@media (max-width: 650px) {
+  .overview-process-panel .cumulative-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 !important;
+  }
+}
+
+
+/* AJUSTE FINAL DO GRÁFICO — linha alinhada ao centro de cada barra */
+.overview-analysis-grid > .overview-process-panel .cumulative-line-layer {
+  left: 34px !important;
+  right: 34px !important;
+  top: 16px !important;
+  height: 112px !important;
+}
+
+.overview-analysis-grid > .overview-process-panel .cumulative-columns {
+  left: 34px !important;
+  right: 34px !important;
+  gap: 0 !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.overview-analysis-grid > .overview-process-panel .cumulative-call-label {
+  width: 82px !important;
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  line-height: 1.15 !important;
+  text-align: center !important;
+}
+
+.overview-analysis-grid > .overview-process-panel .cumulative-line-svg {
+  left: 0;
+  right: 0;
+  width: 100%;
+}
+
+
+/* Ajuste final solicitado:
+   - rótulo das vagas remanescentes legível no tema escuro;
+   - linha de ocupação sempre acima das barras, inclusive com filtros. */
+.overview-analysis-grid > .overview-process-panel .cumulative-remaining-label {
+  color: #18363a !important;
+  text-shadow: none;
+}
+
+.theme-dark .overview-analysis-grid > .overview-process-panel .cumulative-remaining-label {
+  color: #d9e7e8 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.overview-analysis-grid > .overview-process-panel .cumulative-line-layer {
+  top: 4px !important;
+  height: 50px !important;
+  z-index: 5 !important;
+}
+
+.overview-analysis-grid > .overview-process-panel .cumulative-columns {
+  z-index: 2 !important;
+}
+
+.overview-analysis-grid > .overview-process-panel .cumulative-line-svg {
+  z-index: 5 !important;
+}
+
+.overview-analysis-grid > .overview-process-panel .cumulative-line-point-label {
+  z-index: 6 !important;
+}
+
+.overview-analysis-grid > .overview-process-panel .cumulative-line-point-label b {
+  bottom: 8px !important;
+}
+
+@media (max-width: 650px) {
+  .overview-analysis-grid > .overview-process-panel .cumulative-line-layer {
+    top: 4px !important;
+    height: 46px !important;
+  }
+}
+
+
+/* Legendas do eixo X no tema escuro */
+.theme-dark .overview-analysis-grid > .overview-process-panel .cumulative-call-label {
+  color: #d6e5e4 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  font-weight: 600;
+}
+
+/* A legenda deixa explícito que a série da linha é acumulada. */
+.overview-analysis-grid > .overview-process-panel .process-legend-v2 .rate-dot {
+  background: #166b8f;
+}
+
+
+/* VAGAS POR CURSO — nomes completos e legíveis */
+.overview-grid .course-table-container,
+.overview-grid .course-table-wrapper {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+.overview-grid .course-table {
+  width: 100% !important;
+  min-width: 760px !important;
+  table-layout: auto !important;
+}
+
+.overview-grid .course-table th:first-child,
+.overview-grid .course-table td:first-child {
+  width: 38% !important;
+  min-width: 250px !important;
+  max-width: 420px !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+  line-height: 1.25 !important;
+}
+
+.overview-grid .course-table th:not(:first-child),
+.overview-grid .course-table td:not(:first-child) {
+  white-space: nowrap !important;
+}
+
+.overview-grid .course-table td:first-child {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: inherit !important;
+}
+
+.theme-dark .overview-grid .course-table td:first-child {
+  color: #e1eeee !important;
+}
+
+@media (max-width: 900px) {
+  .overview-grid .course-table {
+    min-width: 700px !important;
+  }
+
+  .overview-grid .course-table th:first-child,
+  .overview-grid .course-table td:first-child {
+    min-width: 230px !important;
+    width: 34% !important;
+  }
+}
+
+
+/* =========================================================
+   VAGAS POR CURSO — correção definitiva dos cabeçalhos
+   Não cortar "REMANESCENTES" nem os títulos das chamadas.
+   ========================================================= */
+.overview-analysis-grid > .table-panel .table-container {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+.overview-analysis-grid > .table-panel table {
+  width: 100% !important;
+  min-width: 790px !important;
+  table-layout: fixed !important;
+}
+
+/* Curso */
+.overview-analysis-grid > .table-panel th:nth-child(1),
+.overview-analysis-grid > .table-panel td:nth-child(1) {
+  width: 27% !important;
+}
+
+/* Campus */
+.overview-analysis-grid > .table-panel th:nth-child(2),
+.overview-analysis-grid > .table-panel td:nth-child(2) {
+  width: 9% !important;
+}
+
+/* Vagas */
+.overview-analysis-grid > .table-panel th:nth-child(3),
+.overview-analysis-grid > .table-panel td:nth-child(3) {
+  width: 8% !important;
+}
+
+/* Ocupadas */
+.overview-analysis-grid > .table-panel th:nth-child(4),
+.overview-analysis-grid > .table-panel td:nth-child(4) {
+  width: 10% !important;
+}
+
+/* Remanescentes — mais espaço e SEM reticências */
+.overview-analysis-grid > .table-panel th:nth-child(5),
+.overview-analysis-grid > .table-panel td:nth-child(5) {
+  width: 13% !important;
+}
+
+/* 1ª chamada */
+.overview-analysis-grid > .table-panel th:nth-child(6),
+.overview-analysis-grid > .table-panel td:nth-child(6) {
+  width: 16.5% !important;
+}
+
+/* 2ª chamada */
+.overview-analysis-grid > .table-panel th:nth-child(7),
+.overview-analysis-grid > .table-panel td:nth-child(7) {
+  width: 16.5% !important;
+}
+
+.overview-analysis-grid > .table-panel th {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  line-height: 1.15 !important;
+}
+
+.overview-analysis-grid > .table-panel td {
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.overview-analysis-grid > .table-panel th:nth-child(5),
+.overview-analysis-grid > .table-panel th:nth-child(6),
+.overview-analysis-grid > .table-panel th:nth-child(7) {
+  text-align: center !important;
+}
+
+/* Nomes dos cursos continuam inteiros e podem quebrar em linhas. */
+.overview-analysis-grid > .table-panel td:first-child {
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  line-height: 1.3 !important;
+}
+
+/* No escuro, o cabeçalho continua legível. */
+.theme-dark .overview-analysis-grid > .table-panel th {
+  color: #b9cccc !important;
+}
+
+@media (max-width: 900px) {
+  .overview-analysis-grid > .table-panel table {
+    min-width: 790px !important;
+  }
+}
+
+
+/* Centralização dos títulos das colunas numéricas da tabela VAGAS POR CURSO */
+.overview-analysis-grid > .table-panel th:nth-child(3),
+.overview-analysis-grid > .table-panel th:nth-child(4),
+.overview-analysis-grid > .table-panel th:nth-child(5),
+.overview-analysis-grid > .table-panel th:nth-child(6),
+.overview-analysis-grid > .table-panel th:nth-child(7) {
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+/* Mantém os valores numéricos alinhados ao centro nas mesmas colunas */
+.overview-analysis-grid > .table-panel td:nth-child(3),
+.overview-analysis-grid > .table-panel td:nth-child(4),
+.overview-analysis-grid > .table-panel td:nth-child(5),
+.overview-analysis-grid > .table-panel td:nth-child(6),
+.overview-analysis-grid > .table-panel td:nth-child(7) {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+
+/* =========================================================
+   VAGAS POR CURSO — tudo dentro da área visível
+   Sem rolagem horizontal/vertical no painel.
+   Redução controlada de fonte e espaçamentos.
+   ========================================================= */
+.overview-analysis-grid > .table-panel .table-container {
+  overflow: hidden !important;
+  width: 100% !important;
+  max-height: none !important;
+}
+
+.overview-analysis-grid > .table-panel table {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed !important;
+  font-size: 9px !important;
+}
+
+.overview-analysis-grid > .table-panel th {
+  font-size: 8px !important;
+  line-height: 1.05 !important;
+  padding: 5px 3px !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.overview-analysis-grid > .table-panel td {
+  font-size: 9px !important;
+  line-height: 1.15 !important;
+  padding: 5px 3px !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* Distribuição das larguras para as 7 colunas */
+.overview-analysis-grid > .table-panel th:nth-child(1),
+.overview-analysis-grid > .table-panel td:nth-child(1) {
+  width: 27% !important;
+}
+
+.overview-analysis-grid > .table-panel th:nth-child(2),
+.overview-analysis-grid > .table-panel td:nth-child(2) {
+  width: 9% !important;
+}
+
+.overview-analysis-grid > .table-panel th:nth-child(3),
+.overview-analysis-grid > .table-panel td:nth-child(3) {
+  width: 8% !important;
+}
+
+.overview-analysis-grid > .table-panel th:nth-child(4),
+.overview-analysis-grid > .table-panel td:nth-child(4) {
+  width: 10% !important;
+}
+
+.overview-analysis-grid > .table-panel th:nth-child(5),
+.overview-analysis-grid > .table-panel td:nth-child(5) {
+  width: 13% !important;
+}
+
+.overview-analysis-grid > .table-panel th:nth-child(6),
+.overview-analysis-grid > .table-panel td:nth-child(6) {
+  width: 16.5% !important;
+}
+
+.overview-analysis-grid > .table-panel th:nth-child(7),
+.overview-analysis-grid > .table-panel td:nth-child(7) {
+  width: 16.5% !important;
+}
+
+/* Cursos: quebrar somente entre palavras, sem cortar */
+.overview-analysis-grid > .table-panel td:first-child {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Em telas menores, reduzir mais um pouco em vez de criar rolagem */
+@media (max-width: 900px) {
+  .overview-analysis-grid > .table-panel table {
+    font-size: 8px !important;
+  }
+
+  .overview-analysis-grid > .table-panel th {
+    font-size: 7px !important;
+    padding: 4px 2px !important;
+  }
+
+  .overview-analysis-grid > .table-panel td {
+    font-size: 8px !important;
+    padding: 4px 2px !important;
+  }
+}
+
+
+/* Cabeçalho "Visão geral do processo" — aproximar o título do ícone */
+.overview-section-title,
+.overview-section-title .section-title,
+.overview-header,
+.overview-header .section-title {
+  gap: 6px !important;
+}
+
+.overview-section-title .section-title,
+.overview-header .section-title {
+  margin-left: 0 !important;
+}
+
+.overview-section-title .section-icon,
+.overview-header .section-icon {
+  margin-right: 2px !important;
+}
+
+.overview-section-title > *,
+.overview-header > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+
+/* Ajuste específico do card "Visão geral do processo":
+   aproximar o texto do ícone sem alterar o restante do layout. */
+.insight-card.overview-insight {
+  gap: 7px !important;
+}
+
+.insight-card.overview-insight .insight-icon {
+  flex: 0 0 auto !important;
+  margin-right: 0 !important;
+}
+
+.insight-card.overview-insight > div:last-child {
+  margin-left: 0 !important;
+}
+
+
+/* KPI Lista de espera — manter a descrição em uma única linha */
+.kpi-card .kpi-label {
+  white-space: nowrap !important;
+}
+
+.kpi-card small {
+  white-space: nowrap !important;
+  font-size: 9.5px !important;
+  letter-spacing: -0.05px;
+}
+
+/* Dar mais espaço ao KPI da lista de espera sem alterar os demais. */
+.kpi-card:has(.kpi-label) {
+  min-width: 0;
+}
+
+.kpi-card:has(.kpi-label:last-child) {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+/* O KPI pode ocupar um pouco mais de largura dentro da grade. */
+.kpi-grid .kpi-card:last-child {
+  min-width: 220px !important;
+}
