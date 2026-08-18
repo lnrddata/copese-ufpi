@@ -5,9 +5,9 @@ const UiIcon = ({ name, size = 18 }) => {
   const paths = {
     dashboard: <><rect x="3" y="3" width="6" height="6" rx="1" /><rect x="15" y="3" width="6" height="6" rx="1" /><rect x="3" y="15" width="6" height="6" rx="1" /><rect x="15" y="15" width="6" height="6" rx="1" /></>,
     list: <><path d="M5 6h14M5 12h14M5 18h14" /><circle cx="3" cy="6" r=".8" fill="currentColor" stroke="none" /><circle cx="3" cy="12" r=".8" fill="currentColor" stroke="none" /><circle cx="3" cy="18" r=".8" fill="currentColor" stroke="none" /></>,
-    vacancies: <><path d="M4 6.5h16v13H4z" /><path d="M8 6.5V4h8v2.5M8 12h8M8 16h5" /></>,
+    vacancies: <><path d="M5 4.5h5v6H5zM4 10.5h7v3H4zM14 4.5h5v6h-5zM13 10.5h7v3h-7z" /></>,
     occupied: <><circle cx="12" cy="12" r="8.5" /><path d="m8.2 12 2.5 2.5 5.2-5.2" /></>,
-    remaining: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7v5l3 2" /></>,
+    remaining: <><path d="M8 4.5h8v7H8zM6 11.5h12v3H6z" /></>,
     waiting: <><path d="M5 5.5h14v13H5z" /><path d="M8 9h8M8 13h8M8 17h5" /></>,
     chevron: <path d="m9 6 6 6-6 6" />,
     search: <><circle cx="10.8" cy="10.8" r="6.3" /><path d="m16 16 4.5 4.5" /></>,
@@ -15990,7 +15990,7 @@ const percent = (value, total) => total ? `${Math.round((value / total) * 100)}%
 
 function App() {
   const [search, setSearch] = useState('')
-  const [campus, setCampus] = useState('Todos')
+  const [campus, setCampus] = useState('Todos os campi/centros')
   const [activePage, setActivePage] = useState('overview')
   const [waitingSearch, setWaitingSearch] = useState('')
   const [waitingCourse, setWaitingCourse] = useState('Todos')
@@ -16043,11 +16043,11 @@ function App() {
 
   const filteredCourses = coursesWithDistinctWaiting.filter((course) => {
     const matchesSearch = `${course.name} ${course.campus}`.toLowerCase().includes(search.toLowerCase())
-    const matchesCampus = campus === 'Todos' || course.campus === campus
+    const matchesCampus = campus === 'Todos os campi/centros' || course.campus === campus
     return matchesSearch && matchesCampus
   })
 
-  const hasOverviewFilter = Boolean(search.trim()) || campus !== 'Todos'
+  const hasOverviewFilter = Boolean(search.trim()) || campus !== 'Todos os campi/centros'
 
   const totals = filteredCourses.reduce((acc, course) => ({
     vacancies: acc.vacancies + course.vacancies,
@@ -16098,13 +16098,81 @@ function App() {
     return call
   })
 
-  const modalitySource = hasOverviewFilter ? modalityByCourse : modalityRows
+  // Atualiza a ocupação por modalidade com as ocupações efetivas
+  // das chamadas da lista de espera. A base da Chamada Regular é
+  // preservada; somente o recorte filtrado recebe os acréscimos.
+  const waitingOccupiedByCourseModality = new Map()
+
+  courses.forEach((course) => {
+    const courseCandidates = waitingList.filter((candidate) => (
+      candidate.course === course.name &&
+      candidate.calledModality &&
+      candidate.calledModality !== '-' &&
+      (candidate.call === '1º Lista de espera' || candidate.call === '2º Lista de espera')
+    ))
+
+    ;['1º Lista de espera', '2º Lista de espera'].forEach((callName, callIndex) => {
+      const occupiedLimit = callIndex === 0
+        ? Number(course.firstCallOccupied || 0)
+        : Number(course.secondCallOccupied || 0)
+
+      if (!occupiedLimit) return
+
+      // A mesma pessoa pode aparecer em mais de uma modalidade na lista.
+      // Deduplicamos pela inscrição antes de selecionar as ocupações efetivas.
+      const uniqueCandidates = new Map()
+
+      courseCandidates
+        .filter((candidate) => candidate.call === callName)
+        .forEach((candidate) => {
+          const key = candidate.registration || candidate.candidate
+          const existing = uniqueCandidates.get(key)
+
+          if (
+            !existing ||
+            (Number(candidate.classification) || Number.POSITIVE_INFINITY) <
+              (Number(existing.classification) || Number.POSITIVE_INFINITY)
+          ) {
+            uniqueCandidates.set(key, candidate)
+          }
+        })
+
+      const selected = [...uniqueCandidates.values()]
+        .sort((a, b) => (
+          (Number(a.classification) || Number.POSITIVE_INFINITY) -
+          (Number(b.classification) || Number.POSITIVE_INFINITY)
+        ))
+        .slice(0, occupiedLimit)
+
+      selected.forEach((candidate) => {
+        const key = `${course.campus}||${course.name}||${candidate.calledModality}`
+        waitingOccupiedByCourseModality.set(
+          key,
+          (waitingOccupiedByCourseModality.get(key) || 0) + 1
+        )
+      })
+    })
+  })
+
+  const currentModalityByCourse = modalityByCourse.map((row) => {
+    const key = `${row.campus}||${row.course}||${row.modality}`
+    const additionalOccupied = waitingOccupiedByCourseModality.get(key) || 0
+    const occupied = row.occupied + additionalOccupied
+
+    return {
+      ...row,
+      occupied,
+      remaining: Math.max(0, row.vacancies - occupied),
+    }
+  })
+
+  const modalitySource = hasOverviewFilter ? currentModalityByCourse : modalityRows
   const filteredModalityRows = [...modalitySource
     .filter((row) => {
       const searchTerm = normalizeText(search)
       if (!hasOverviewFilter) return true
       const matchesSearch = !searchTerm || normalizeText(`${row.course} ${row.campus}`).includes(searchTerm)
-      const matchesCampus = campus === 'Todos' || row.campus === campus
+      const matchesCampus = campus === 'Todos os campi/centros' || row.campus === campus
       return matchesSearch && matchesCampus
     })
     .reduce((modalityMap, row) => {
@@ -16175,13 +16243,12 @@ function App() {
   // Cada ponto fica no centro do grupo de barras correspondente à sua chamada.
   // A escala de vagas usa uma margem superior discreta para preservar os rótulos.
   const chartMax = Math.max(1, Math.ceil((processCapacity * 1.15) / 10) * 10)
-  // Transformação direta do eixo direito: 100% no topo e 0% na base do plot.
-  // A linha percentual usa uma faixa superior própria; assim, sua escala nunca invade barras ou rótulos.
+  // Escala percentual visual equivalente a um eixo imaginário à direita.
+  // A faixa superior mantém a linha acima das barras, mas amplia a distância
+  // entre percentuais para que a variação de 53,8% → 84,0% fique mais evidente.
   const lineBandTop = 4
   const lineBandHeight = 50
-  // Compress the percentage scale into the upper band of the chart.
-  // 100% stays near the top; 0% still remains above the bar stack.
-  const occupancyLineY = (rate) => 10 + ((100 - Math.max(0, Math.min(100, rate))) * 0.35)
+  const occupancyLineY = (rate) => 5 + ((100 - Math.max(0, Math.min(100, rate))) * 0.60)
   const pointX = (index) => ((index + 0.5) / Math.max(occupationSnapshots.length, 1)) * 100
   const occupancyPoints = occupationSnapshots.map((call, index) => `${pointX(index)},${occupancyLineY(call.rate)}`).join(' ')
   const vacancyTicks = [1, .75, .5, .25, 0].map((ratio) => Math.round(chartMax * ratio))
@@ -16195,26 +16262,37 @@ function App() {
           <button className={`navigation-item ${activePage === 'overview' ? 'active' : ''}`} onClick={() => setActivePage('overview')}><UiIcon name="dashboard" size={16} /> <span>Visão geral</span></button>
           <button className={`navigation-item ${activePage === 'waiting' ? 'active' : ''}`} onClick={() => setActivePage('waiting')}><UiIcon name="list" size={16} /> <span>Lista de espera</span></button>
         </nav>
-        <div className="privacy-note"><strong>Transparência dos dados</strong><span>Indicadores oficiais apresentados sem estimativas ou projeções.</span></div>
+        <div className="privacy-note"><strong>Informação institucional</strong><span>Dados provenientes das bases oficiais do processo seletivo, organizados para acompanhamento das vagas e convocações do SISU.</span></div>
       </aside>
 
       <main className="main-content">
                 {activePage === 'waiting' ? (
           <section className="waiting-page">
             <section className="page-heading compact-heading"><div><span className="eyebrow">CONSULTA INDIVIDUAL</span><h1>Lista de Espera</h1><p>Consulte a classificação publicada oficialmente pela UFPI, organizada por curso, campus e modalidade.</p></div><div className="source-card"><span>Fonte oficial</span><strong>Base publicada pela UFPI</strong></div></section>
-            <section className="waiting-kpis" aria-label="Indicadores da lista de espera"><article className="kpi-card"><span className="kpi-label"><i className="data-icon candidates-icon" aria-hidden="true">◎</i> Registros no recorte</span><strong>{number(waitingStats.total)}</strong><small>Resultado dos filtros aplicados</small></article><article className="kpi-card"><span className="kpi-label"><i className="data-icon waiting-icon" aria-hidden="true">◷</i> Aguardando convocação</span><strong>{number(waitingStats.waiting)}</strong><small>Classificados sem chamada registrada</small></article><article className="kpi-card highlight"><span className="kpi-label"><i className="data-icon called-icon" aria-hidden="true">✓</i> Convocados</span><strong>{number(waitingStats.called)}</strong><small>Chamada registrada na base oficial</small></article></section>
-            <section className="panel waiting-panel"><div className="panel-heading"><div><span className="eyebrow">BUSCA E FILTROS</span><h2>Localize seu registro</h2><p className="panel-caption">Os nomes são exibidos conforme a publicação oficial. CPFs não são reproduzidos nesta interface.</p></div></div><div className="waiting-filters"><label className="filter-control search-filter"><span>Nome do candidato</span><input value={waitingSearch} onChange={(event) => setWaitingSearch(event.target.value)} placeholder="Digite o nome" aria-label="Buscar por nome do candidato" /></label><label className="filter-control"><span>Curso</span><select value={waitingCourse} onChange={(event) => setWaitingCourse(event.target.value)}><option>Todos</option>{[...new Set(waitingList.map((item) => item.course))].map((item) => <option key={item}>{item}</option>)}</select></label><label className="filter-control"><span>Campus</span><select value={waitingCampus} onChange={(event) => setWaitingCampus(event.target.value)}><option>Todos</option>{[...new Set(waitingList.map((item) => item.campus))].map((item) => <option key={item}>{item}</option>)}</select></label><label className="filter-control"><span>Modalidade</span><select value={waitingModality} onChange={(event) => setWaitingModality(event.target.value)}><option>Todos</option>{[...new Set(waitingList.map((item) => item.modality))].map((item) => <option key={item}>{item}</option>)}</select></label><label className="filter-control"><span>Situação</span><select value={waitingStatus} onChange={(event) => setWaitingStatus(event.target.value)}><option>Todos</option><option>Aguardando convocação</option><option>Convocado</option></select></label>{(waitingSearch || waitingCourse !== 'Todos' || waitingCampus !== 'Todos' || waitingModality !== 'Todos' || waitingStatus !== 'Todos') && <button className="clear-button" type="button" onClick={() => { setWaitingSearch(''); setWaitingCourse('Todos'); setWaitingCampus('Todos'); setWaitingModality('Todos'); setWaitingStatus('Todos') }} aria-label="Limpar filtros da lista de espera">Limpar filtros</button>}</div></section>
+            <section className="waiting-kpis" aria-label="Indicadores da lista de espera"><article className="kpi-card"><span className="kpi-label"><i className="data-icon candidates-icon" aria-hidden="true">◎</i> Manifestaram interesse</span><strong>{number(waitingStats.total)}</strong><small>Lista de espera ativa</small></article><article className="kpi-card"><span className="kpi-label"><i className="data-icon waiting-icon" aria-hidden="true">◷</i> Aguardando convocação</span><strong>{number(waitingStats.waiting)}</strong><small>Classificados sem chamada registrada</small></article><article className="kpi-card highlight"><span className="kpi-label"><i className="data-icon called-icon" aria-hidden="true">✓</i> Convocados</span><strong>{number(waitingStats.called)}</strong><small>Chamada registrada na base oficial</small></article></section>
+            <section className="panel waiting-panel"><div className="panel-heading"><div><span className="eyebrow">BUSCA E FILTROS</span><h2>Localize seu registro</h2><p className="panel-caption">Os nomes são exibidos conforme a publicação oficial. CPFs não são reproduzidos nesta interface.</p></div></div><div className="waiting-filters"><label className="filter-control search-filter"><span>Nome do candidato</span><input value={waitingSearch} onChange={(event) => setWaitingSearch(event.target.value)} placeholder="Digite o nome" aria-label="Buscar por nome do candidato" /></label><label className="filter-control"><span>Curso</span><select value={waitingCourse} onChange={(event) => setWaitingCourse(event.target.value)}><option>Todos</option>{[...new Set(waitingList.map((item) => item.course))].map((item) => <option key={item}>{item}</option>)}</select></label><label className="filter-control"><span>Campus/Centro</span><select value={waitingCampus} onChange={(event) => setWaitingCampus(event.target.value)}><option>Todos</option>{[...new Set(waitingList.map((item) => item.campus))].map((item) => <option key={item}>{item}</option>)}</select></label><label className="filter-control"><span>Modalidade</span><select value={waitingModality} onChange={(event) => setWaitingModality(event.target.value)}><option>Todos</option>{[...new Set(waitingList.map((item) => item.modality))].map((item) => <option key={item}>{item}</option>)}</select></label><label className="filter-control"><span>Situação</span><select value={waitingStatus} onChange={(event) => setWaitingStatus(event.target.value)}><option>Todos</option><option>Aguardando convocação</option><option>Convocado</option></select></label>{(waitingSearch || waitingCourse !== 'Todos' || waitingCampus !== 'Todos' || waitingModality !== 'Todos' || waitingStatus !== 'Todos') && <button className="clear-button" type="button" onClick={() => { setWaitingSearch(''); setWaitingCourse('Todos'); setWaitingCampus('Todos'); setWaitingModality('Todos'); setWaitingStatus('Todos') }} aria-label="Limpar filtros da lista de espera">Limpar filtros</button>}</div></section>
             <section className="panel waiting-panel"><div className="panel-heading"><div><span className="eyebrow">LISTA PUBLICADA</span><h2>Classificação dos candidatos</h2></div><span className="panel-caption">{number(filteredWaiting.length)} registros exibidos</span></div><div className="table-container waiting-table-container">{filteredWaiting.length === 0 ? <div className="empty-state" role="status">Nenhum candidato encontrado com os filtros atuais.</div> : <table key={`${waitingSearch}|${waitingCourse}|${waitingCampus}|${waitingModality}|${waitingStatus}`} className="waiting-table"><thead><tr><th>Nome</th><th>Curso</th><th>Campus</th><th>Convocação</th><th>Classificação</th><th>Nota</th><th>Situação</th></tr></thead><tbody>{visibleWaiting.map((candidate) => <tr key={`${candidate.registration}-${candidate.course}`}><td><strong>{candidate.candidate}</strong><small>Inscrição: {candidate.registration}</small></td><td>{candidate.courseShort}</td><td>{candidate.campus}</td><td><strong className="called-modality">{candidate.calledModality}</strong></td><td>{candidate.classifications.map((item) => `${item.modality}: ${number(item.value)}º`).join(' · ')}</td><td>{candidate.score == null ? '—' : candidate.score.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td><td><span className={`waiting-status ${candidate.status === 'Convocado' ? 'called' : 'pending'}`}>{candidate.status}</span></td></tr>)}</tbody></table>} </div>{filteredWaiting.length > 250 && <div className="waiting-limit"></div>}<div className="modality-footer"><span>.</span></div></section>
           </section>
         ) : (
           <>
         <section className="page-heading"><div className="institutional-lockup"><img src="/logo-ufpi.png" alt="Brasão da Universidade Federal do Piauí" /><div><span className="institution-name">UNIVERSIDADE FEDERAL DO PIAUÍ</span><span className="institution-unit">PRÓ-REITORIA DE ENSINO DE GRADUAÇÃO</span><h1>Acompanhamento da lista de espera do SISU</h1><p>Monitoramento institucional de vagas, ocupações e convocações.</p></div></div><div className="institutional-actions"><button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'} title={theme === 'light' ? 'Tema escuro' : 'Tema claro'}><span aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span><strong>{theme === 'light' ? 'Escuro' : 'Claro'}</strong></button></div></section>
 
-        <section className="filters" aria-label="Filtros do dashboard">
-          <select value={campus} onChange={(event) => setCampus(event.target.value)}><option>Todos</option><option>CAFS</option><option>CCN</option><option>CCE</option></select>
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar curso ou campus" aria-label="Buscar curso ou campus" />
-          {(search || campus !== 'Todos') && <button className="clear-button" onClick={() => { setSearch(''); setCampus('Todos') }} aria-label="Limpar filtros do painel">Limpar filtros</button>}
-          {hasOverviewFilter && <div className="active-filter-summary" aria-live="polite"><span>Recorte ativo</span>{campus !== 'Todos' && <b>Campus: {campus}</b>}{search && <b>Busca: {search}</b>}</div>}
+        <section className="filters" aria-label="Filtros da visão geral">
+          <label className="filter-control">
+            <span>Campus/Centro</span>
+            <select value={campus} onChange={(event) => setCampus(event.target.value)} aria-label="Filtrar por campus/centro">
+              <option>Todos</option>
+              <option>CAFS</option>
+              <option>CCN</option>
+              <option>CCE</option>
+            </select>
+          </label>
+          <label className="filter-control search-filter">
+            <span>Curso</span>
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Todos os cursos" aria-label="Filtrar por curso" />
+          </label>
+          {(search || campus !== 'Todos os campi/centros') && <button className="clear-button" type="button" onClick={() => { setSearch(''); setCampus('Todos os campi/centros') }}>Limpar filtros</button>}
+          {hasOverviewFilter && <div className="active-filter-summary" aria-live="polite"><span>Filtro ativo</span>{campus !== 'Todos os campi/centros' && <b>Campus/Centro: {campus}</b>}{search && <b>Curso: {search}</b>}</div>}
         </section>
 
         <section className="kpi-grid" aria-label="Indicadores principais">
@@ -16232,13 +16310,8 @@ function App() {
           </article>
           <article className="kpi-card overview-kpi">
             <div className="kpi-icon kpi-icon-slate"><UiIcon name="waiting" /></div>
-            <div><span className="kpi-label">Lista de espera</span><strong>{number(totals.waitingTotal)}</strong><small>{number(totals.firstCall)} convocados na 1ª · {number(totals.secondCall)} convocados na 2ª chamada</small></div>
+            <div><span className="kpi-label">Lista de espera</span><strong>{number(totals.waitingTotal)}</strong><small className="waiting-kpi-detail">{number(totals.firstCall)} convocados na 1ª · {number(totals.secondCall)} convocados na 2ª chamada</small></div>
           </article>
-        </section>
-
-        <section className="insight-card overview-insight">
-          <div className="insight-icon"><UiIcon name="dashboard" size={17} /></div>
-          <div><strong>Visão geral do processo</strong><p>{percent(currentOccupied, totals.vacancies)} das vagas estão ocupadas. Restam {number(currentRemaining)} vagas para as próximas chamadas.</p></div>
         </section>
 
         <section className="overview-grid">
@@ -16320,7 +16393,7 @@ function App() {
                   {occupationSnapshots.map((call, index) => {
                     const x = pointX(index)
                     const y = occupancyLineY(call.rate)
-                    return <circle key={`cum-svg-point-${index}`} className="cumulative-svg-point" cx={x} cy={y} r="0.75" vectorEffect="non-scaling-stroke" />
+                    return <circle key={`cum-svg-point-${index}`} className="cumulative-svg-point" cx={x} cy={y} r="1.05" vectorEffect="non-scaling-stroke" />
                   })}
                 </svg>
                 {occupationSnapshots.map((call, index) => {
@@ -16373,7 +16446,7 @@ function App() {
 
         
 
-        <footer>ACOMPANHA UFPI · SISU 2026</footer>
+        <footer>UFPI · PREG · 2026</footer>
         </>)}
       </main>
     </div>
