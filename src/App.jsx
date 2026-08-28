@@ -61,9 +61,10 @@ function buildDashboardData(workbook) {
     'Chamada Regular',
     '1º Chamada da lista de espera',
     '2º Chamada da lista de espera',
+    '3º Chamada da lista de espera',
   ]
 
-  // Vagas por curso/campus: a aba "vagas" já traz as três etapas do processo.
+  // Vagas por curso/campus: a aba "vagas" traz as etapas do processo.
   const courseMap = new Map()
 
   vagas.forEach((row) => {
@@ -79,6 +80,8 @@ function buildDashboardData(workbook) {
         firstCallOccupied: 0,
         secondCall: 0,
         secondCallOccupied: 0,
+        thirdCall: 0,
+        thirdCallOccupied: 0,
         waitingTotal: 0,
         awaiting: 0,
         waitingConvoked: 0,
@@ -100,6 +103,9 @@ function buildDashboardData(workbook) {
     } else if (row.chamada === '2º Chamada da lista de espera') {
       course.secondCall += vacancies
       course.secondCallOccupied += occupied
+    } else if (row.chamada === '3º Chamada da lista de espera') {
+      course.thirdCall += vacancies
+      course.thirdCallOccupied += occupied
     }
   })
 
@@ -153,11 +159,10 @@ function buildDashboardData(workbook) {
     .filter(Boolean)
 
   // Ocupação por modalidade — situação acumulada do processo.
-  // A capacidade (vagas) vem somente da Chamada Regular, que é a oferta
-  // original. A ocupação soma a Chamada Regular + as chamadas posteriores,
-  // sempre limitada à capacidade original de cada curso/campus/modalidade.
-  // Assim, uma nova chamada não cria vagas adicionais no denominador, mas as
-  // matrículas/ocupações efetivas das chamadas posteriores entram no numerador.
+  // A ocupação soma as ocupações registradas em todas as chamadas.
+  // As vagas remanescentes são as da última chamada registrada para cada
+  // curso/campus/modalidade. Dessa forma, a situação final não duplica vagas
+  // entre chamadas e permanece compatível com a oferta total do processo.
   const modalityAccumulator = new Map()
   vagas.forEach((row) => {
     const campus = String(row.campus_centro ?? '').trim()
@@ -168,36 +173,46 @@ function buildDashboardData(workbook) {
       campus,
       course,
       modality,
-      vacancies: 0,
       occupiedAcrossCalls: 0,
+      latestCallRank: -1,
+      latestRemaining: 0,
       hasRegularBase: false,
     }
 
     if (row.chamada === 'Chamada Regular') {
-      current.vacancies += toNumber(row.vagas)
       current.hasRegularBase = true
     }
+
     current.occupiedAcrossCalls += toNumber(row.ocupacoes)
+
+    const rowCallRank = callOrder.indexOf(row.chamada)
+    if (rowCallRank >= current.latestCallRank) {
+      current.latestCallRank = rowCallRank
+      current.latestRemaining = toNumber(row.remanescentes)
+    }
+
     modalityAccumulator.set(key, current)
   })
 
   const modalityByCourse = [...modalityAccumulator.values()]
-    .filter((row) => row.hasRegularBase && row.vacancies > 0)
+    .filter((row) => row.hasRegularBase)
     .map((row) => {
-      const occupied = Math.min(row.vacancies, row.occupiedAcrossCalls)
+      const occupied = row.occupiedAcrossCalls
+      const remaining = Math.max(0, row.latestRemaining)
       return {
         campus: row.campus,
         course: row.course,
         modality: row.modality,
-        vacancies: row.vacancies,
+        vacancies: occupied + remaining,
         occupied,
-        remaining: Math.max(0, row.vacancies - occupied),
+        remaining,
       }
     })
 
+  // Resumo por modalidade para a tabela "Ocupação por modalidade".
   const modalityRows = [...modalityByCourse
-    .reduce((map, row) => {
-      const current = map.get(row.modality) || {
+    .reduce((modalityMap, row) => {
+      const current = modalityMap.get(row.modality) || {
         name: row.modality,
         vacancies: 0,
         occupied: 0,
@@ -205,9 +220,9 @@ function buildDashboardData(workbook) {
       }
       current.vacancies += row.vacancies
       current.occupied += row.occupied
-      current.remaining = Math.max(0, current.vacancies - current.occupied)
-      map.set(row.modality, current)
-      return map
+      current.remaining += row.remaining
+      modalityMap.set(row.modality, current)
+      return modalityMap
     }, new Map())
     .values()]
 
@@ -278,6 +293,7 @@ const CumulativeOccupancyChart = ({ snapshots, capacity, formatNumber, formatRat
     if (name === 'Chamada Regular') return ['Chamada', 'Regular']
     if (name.includes('1º')) return ['1º Chamada da lista de', 'espera']
     if (name.includes('2º')) return ['2º Chamada da lista de', 'espera']
+    if (name.includes('3º')) return ['3º Chamada da lista de', 'espera']
     return [name]
   }
 
@@ -426,17 +442,20 @@ function App() {
     const wasCalled = candidate.status === 'Convocado' || (candidate.calledModality && candidate.calledModality !== '-')
     const wasFirstCall = candidate.call === '1º Lista de espera' && Boolean(wasCalled)
     const wasSecondCall = candidate.call === '2º Lista de espera' && Boolean(wasCalled)
+    const wasThirdCall = (candidate.call === '3º Lista de espera' || candidate.call === '3ª Lista de espera' || candidate.call === '3º Chamada da lista de espera') && Boolean(wasCalled)
     const existing = candidatesInCourse.get(candidateKey)
     if (!existing) {
       candidatesInCourse.set(candidateKey, {
         called: Boolean(wasCalled),
         firstCall: Boolean(wasFirstCall),
         secondCall: Boolean(wasSecondCall),
+        thirdCall: Boolean(wasThirdCall),
       })
     } else {
       existing.called = existing.called || Boolean(wasCalled)
       existing.firstCall = existing.firstCall || Boolean(wasFirstCall)
       existing.secondCall = existing.secondCall || Boolean(wasSecondCall)
+      existing.thirdCall = existing.thirdCall || Boolean(wasThirdCall)
     }
     return courseMap
   }, new Map())
@@ -445,12 +464,14 @@ function App() {
     const uniqueCandidates = [...(uniqueWaitingByCourse.get(course.name)?.values() || [])]
     const firstCall = uniqueCandidates.filter((candidate) => candidate.firstCall).length
     const secondCall = uniqueCandidates.filter((candidate) => candidate.secondCall).length
+    const thirdCall = uniqueCandidates.filter((candidate) => candidate.thirdCall).length
     const called = uniqueCandidates.filter((candidate) => candidate.called).length
     return {
       ...course,
       waitingTotal: uniqueCandidates.length,
       firstCall,
       secondCall,
+      thirdCall,
       awaiting: uniqueCandidates.length - called,
     }
   })
@@ -471,12 +492,15 @@ function App() {
     firstCallOccupied: acc.firstCallOccupied + course.firstCallOccupied,
     secondCall: acc.secondCall + course.secondCall,
     secondCallOccupied: acc.secondCallOccupied + course.secondCallOccupied,
+    thirdCall: acc.thirdCall + course.thirdCall,
+    thirdCallOccupied: acc.thirdCallOccupied + course.thirdCallOccupied,
     waitingTotal: acc.waitingTotal + course.waitingTotal,
     awaiting: acc.awaiting + course.awaiting,
   }), {
     vacancies: 0, occupied: 0, remaining: 0,
     firstCall: 0, firstCallOccupied: 0,
     secondCall: 0, secondCallOccupied: 0,
+    thirdCall: 0, thirdCallOccupied: 0,
     waitingTotal: 0, awaiting: 0,
   })
 
@@ -507,6 +531,15 @@ function App() {
         occupied: totals.secondCallOccupied,
         remaining: Math.max(0, totals.secondCall - totals.secondCallOccupied),
         summoned: totals.secondCall,
+      }
+    }
+    if (call.name === '3º Chamada da lista de espera') {
+      return {
+        ...call,
+        vacancies: totals.thirdCall,
+        occupied: totals.thirdCallOccupied,
+        remaining: Math.max(0, totals.thirdCall - totals.thirdCallOccupied),
+        summoned: totals.thirdCall,
       }
     }
     return call
@@ -609,7 +642,12 @@ function App() {
   const processCapacity = regularCall.vacancies || 1
   const regularOccupied = Math.min(
     processCapacity,
-    filteredCourses.reduce((sum, course) => sum + (course.occupied - course.firstCallOccupied - course.secondCallOccupied), 0)
+    filteredCourses.reduce((sum, course) => sum + (
+      course.occupied -
+      course.firstCallOccupied -
+      course.secondCallOccupied -
+      course.thirdCallOccupied
+    ), 0)
   )
 
   let cumulativeOccupied = regularOccupied
@@ -695,7 +733,7 @@ function App() {
           </article>
           <article className="kpi-card overview-kpi">
             <div className="kpi-icon kpi-icon-slate"><UiIcon name="waiting" /></div>
-            <div><span className="kpi-label">Lista de espera</span><strong>{number(totals.waitingTotal)}</strong><small className="waiting-kpi-detail">{number(totals.firstCall)} convocados na 1ª · {number(totals.secondCall)} convocados na 2ª chamada</small></div>
+            <div><span className="kpi-label">Lista de espera</span><strong>{number(totals.waitingTotal)}</strong><small className="waiting-kpi-detail">{number(totals.firstCall)} convocados na 1ª · {number(totals.secondCall)} na 2ª · {number(totals.thirdCall)} na 3ª chamada</small></div>
           </article>
         </section>
 
@@ -710,7 +748,7 @@ function App() {
               {filteredCourses.length === 0 ? <div className="empty-state" role="status">Nenhum curso encontrado com os filtros atuais.</div> : filteredCourses.map((course) => {
                 // `course.occupied` já contém a ocupação da Chamada Regular
                 // somada às ocupações efetivamente registradas nas chamadas posteriores.
-                // Não somar firstCallOccupied/secondCallOccupied novamente aqui.
+                // Não somar firstCallOccupied/secondCallOccupied/thirdCallOccupied novamente aqui.
                 const courseCurrentOccupied = course.occupied
                 const courseCurrentRemaining = Math.max(0, course.vacancies - courseCurrentOccupied)
                 const occupiedRate = course.vacancies ? (courseCurrentOccupied / course.vacancies) * 100 : 0
@@ -774,7 +812,7 @@ function App() {
             </div>
           </section>
 
-          <section className="panel table-panel"><div className="panel-heading"><div><span className="eyebrow">VAGAS POR CURSO</span><h2>Distribuição das vagas e convocações</h2></div></div><div className="table-container"><table><thead><tr><th>Curso</th><th>Campus</th><th>Vagas</th><th>Ocupadas</th><th>Remanescentes</th><th>Convocados<br />1ª chamada</th><th>Convocados<br />2ª chamada</th><th>Aguardando</th></tr></thead><tbody>{filteredCourses.map((course) => { const courseCurrentOccupied = course.occupied; const courseCurrentRemaining = Math.max(0, course.vacancies - courseCurrentOccupied); return <tr key={`${course.campus}||${course.name}`}><td><strong>{course.name}</strong></td><td>{course.campus}</td><td>{number(course.vacancies)}</td><td>{number(courseCurrentOccupied)}</td><td>{number(courseCurrentRemaining)}</td><td>{number(course.firstCall)}</td><td>{number(course.secondCall)}</td><td>{number(course.awaiting)}</td></tr> })}</tbody></table></div></section>
+          <section className="panel table-panel"><div className="panel-heading"><div><span className="eyebrow">VAGAS POR CURSO</span><h2>Distribuição das vagas e convocações</h2></div></div><div className="table-container"><table><thead><tr><th>Curso</th><th>Campus</th><th>Vagas</th><th>Ocupadas</th><th>Remanescentes</th><th>Convocados<br />1ª chamada</th><th>Convocados<br />2ª chamada</th><th>Convocados<br />3ª chamada</th></tr></thead><tbody>{filteredCourses.map((course) => { const courseCurrentOccupied = course.occupied; const courseCurrentRemaining = Math.max(0, course.vacancies - courseCurrentOccupied); return <tr key={`${course.campus}||${course.name}`}><td><strong>{course.name}</strong></td><td>{course.campus}</td><td>{number(course.vacancies)}</td><td>{number(courseCurrentOccupied)}</td><td>{number(courseCurrentRemaining)}</td><td>{number(course.firstCall)}</td><td>{number(course.secondCall)}</td><td>{number(course.thirdCall)}</td></tr> })}</tbody></table></div></section>
           </div>
         </section>
 

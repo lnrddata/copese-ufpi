@@ -2734,3 +2734,62 @@ input:focus-visible {
     max-height: 56px !important;
   }
 }
+
+
+/* Ajuste exclusivo: tabela "Distribuição das vagas e convocações"
+   para exibir todas as colunas no painel, incluindo a 3ª chamada. */
+@media (min-width: 1001px) {
+  .overview-layout-right > .table-panel .table-container {
+    overflow-x: hidden !important;
+  }
+
+  .overview-layout-right > .table-panel .table-container table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 10px !important;
+  }
+
+  .overview-layout-right > .table-panel .table-container th,
+  .overview-layout-right > .table-panel .table-container td {
+    box-sizing: border-box !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .overview-layout-right > .table-panel .table-container th:nth-child(1),
+  .overview-layout-right > .table-panel .table-container td:nth-child(1) { width: 23%; }
+
+  .overview-layout-right > .table-panel .table-container th:nth-child(2),
+  .overview-layout-right > .table-panel .table-container td:nth-child(2) { width: 8%; }
+
+  .overview-layout-right > .table-panel .table-container th:nth-child(3),
+  .overview-layout-right > .table-panel .table-container td:nth-child(3) { width: 7%; }
+
+  .overview-layout-right > .table-panel .table-container th:nth-child(4),
+  .overview-layout-right > .table-panel .table-container td:nth-child(4) { width: 8%; }
+
+  .overview-layout-right > .table-panel .table-container th:nth-child(5),
+  .overview-layout-right > .table-panel .table-container td:nth-child(5) { width: 10%; }
+
+  .overview-layout-right > .table-panel .table-container th:nth-child(6),
+  .overview-layout-right > .table-panel .table-container td:nth-child(6),
+  .overview-layout-right > .table-panel .table-container th:nth-child(7),
+  .overview-layout-right > .table-panel .table-container td:nth-child(7),
+  .overview-layout-right > .table-panel .table-container th:nth-child(8),
+  .overview-layout-right > .table-panel .table-container td:nth-child(8),
+  .overview-layout-right > .table-panel .table-container th:nth-child(9),
+  .overview-layout-right > .table-panel .table-container td:nth-child(9) { width: 11%; }
+
+  .overview-layout-right > .table-panel .table-container th {
+    line-height: 1.15 !important;
+  }
+
+  .overview-layout-right > .table-panel .table-container td {
+    line-height: 1.25 !important;
+  }
+}
