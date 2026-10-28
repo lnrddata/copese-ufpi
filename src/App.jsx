@@ -685,7 +685,6 @@ function App() {
           <button className={`navigation-item ${activePage === 'overview' ? 'active' : ''}`} onClick={() => setActivePage('overview')}><UiIcon name="dashboard" size={16} /> <span>Visão geral</span></button>
           <button className={`navigation-item ${activePage === 'waiting' ? 'active' : ''}`} onClick={() => setActivePage('waiting')}><UiIcon name="list" size={16} /> <span>Lista de espera</span></button>
         </nav>
-        <div className="privacy-note"><strong>Informação institucional</strong><span>Dados provenientes das bases oficiais do processo seletivo, organizados para acompanhamento das vagas e convocações do SISU.</span></div>
       </aside>
 
       <main className="main-content">
