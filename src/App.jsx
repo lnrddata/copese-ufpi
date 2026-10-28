@@ -680,7 +680,7 @@ function App() {
   return (
     <div className={`app-shell ${theme === 'dark' ? 'theme-dark' : 'theme-light'}`}>
       <aside className="sidebar">
-        <div className="brand institutional-sidebar-brand"><img className="sidebar-linear-logo" src="/logo-ufpi.png" alt="Logo linear da Universidade Federal do Piauí" /><div className="sidebar-institution-copy"><strong>UFPI · PREG</strong></div></div>
+        <div className="brand institutional-sidebar-brand"><img className="sidebar-linear-logo" src={`${import.meta.env.BASE_URL}logo-ufpi.png`} alt="Logo linear da Universidade Federal do Piauí" /><div className="sidebar-institution-copy"><strong>UFPI · PREG</strong></div></div>
         <nav className="navigation">
           <button className={`navigation-item ${activePage === 'overview' ? 'active' : ''}`} onClick={() => setActivePage('overview')}><UiIcon name="dashboard" size={16} /> <span>Visão geral</span></button>
           <button className={`navigation-item ${activePage === 'waiting' ? 'active' : ''}`} onClick={() => setActivePage('waiting')}><UiIcon name="list" size={16} /> <span>Lista de espera</span></button>
@@ -697,7 +697,7 @@ function App() {
           </section>
         ) : (
           <>
-        <section className="page-heading"><div className="institutional-lockup"><img src="/logo-ufpi.png" alt="Brasão da Universidade Federal do Piauí" /><div><span className="institution-name">UNIVERSIDADE FEDERAL DO PIAUÍ</span><span className="institution-unit">PRÓ-REITORIA DE ENSINO DE GRADUAÇÃO</span><h1>Acompanhamento da lista de espera</h1><p>Monitoramento institucional de vagas, ocupações e convocações.</p></div></div><div className="institutional-actions"><button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'} title={theme === 'light' ? 'Tema escuro' : 'Tema claro'}><span aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span><strong>{theme === 'light' ? 'Escuro' : 'Claro'}</strong></button></div></section>
+        <section className="page-heading"><div className="institutional-lockup"><img src={`${import.meta.env.BASE_URL}logo-ufpi.png`} alt="Brasão da Universidade Federal do Piauí" /><div><span className="institution-name">UNIVERSIDADE FEDERAL DO PIAUÍ</span><span className="institution-unit">PRÓ-REITORIA DE ENSINO DE GRADUAÇÃO</span><h1>Acompanhamento da lista de espera</h1><p>Monitoramento institucional de vagas, ocupações e convocações.</p></div></div><div className="institutional-actions"><button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'} title={theme === 'light' ? 'Tema escuro' : 'Tema claro'}><span aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span><strong>{theme === 'light' ? 'Escuro' : 'Claro'}</strong></button></div></section>
 
         <section className="filters" aria-label="Filtros da visão geral">
           <label className="filter-control">
